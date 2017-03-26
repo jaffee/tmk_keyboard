@@ -25,7 +25,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keymap.h"
 
 static const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    {{KC_A}},
+  {
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+    {KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A, KC_A},
+  },
 };  // to test: KC_CAPS, KT_BTLD, KC_A
 
 static const action_t fn_actions[] = {
