@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ch.h"
 #include "hal.h"
-
+#include "timer.h"
 /*
  * scan matrix
  */
@@ -31,14 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #   define DEBOUNCE 5
 #endif
 static uint8_t debouncing = DEBOUNCE;
-
 /* matrix state(1:on, 0:off) */
 static matrix_row_t matrix[MATRIX_ROWS];
 static matrix_row_t matrix_debouncing[MATRIX_ROWS];
 
 static matrix_row_t read_cols(void);
 static void init_cols(void);
-static void unselect_rows(void);
+static void unselect_row(uint8_t row);
 static void select_row(uint8_t row);
 
 
@@ -61,7 +60,9 @@ uint8_t matrix_cols(void)
 void matrix_init(void)
 {
     // initialize row and col
-    unselect_rows();
+    for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
+      unselect_row(i);
+    }
     init_cols();
 
     // initialize matrix state: all keys off
@@ -70,39 +71,47 @@ void matrix_init(void)
         matrix_debouncing[i] = 0;
     }
 
+    debug_enable = 1;
+
     //debug
     debug_matrix = true;
     LED_ON();
     wait_ms(500);
     LED_OFF();
+    timer_init();
 }
 
 uint8_t matrix_scan(void)
 {
+
+  uint32_t last = timer_read32();
+  // dprintf("start time: %d\n", last);
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
         select_row(i);
-        wait_us(30);  // without this wait read unstable value.
+        wait_us(20);  // without this wait read unstable value.
         matrix_row_t cols = read_cols();
-        if (matrix_debouncing[i] != cols) {
-            matrix_debouncing[i] = cols;
-            if (debouncing) {
-                debug("bounce!: "); debug_hex(debouncing); debug("\n");
-            }
-            debouncing = DEBOUNCE;
-        }
-        unselect_rows();
+        matrix[i] = cols;
+        /* if (matrix_debouncing[i] != cols) { */
+        /*     matrix_debouncing[i] = cols; */
+        /*     if (debouncing) { */
+        /*       dprintf("bounce!: %d", debouncing); dprint("\n"); */
+        /*     } */
+        /*     debouncing = DEBOUNCE; */
+        /* } */
+        unselect_row(i);
     }
 
-    if (debouncing) {
-        if (--debouncing) {
-            wait_ms(1);
-        } else {
-            for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
-                matrix[i] = matrix_debouncing[i];
-            }
-        }
-    }
-
+    /* if (debouncing) { */
+    /*     if (--debouncing) { */
+    /*       dprintf("wait for debounce 1ms"); */
+    /*         wait_ms(1); */
+    /*     } else { */
+    /*         for (uint8_t i = 0; i < MATRIX_ROWS; i++) { */
+    /*             matrix[i] = matrix_debouncing[i]; */
+    /*         } */
+    /*     } */
+    /* } */
+    // dprintf("elapsed time: %d\n", timer_elapsed32(last));
     return 1;
 }
 
@@ -159,26 +168,47 @@ static matrix_row_t read_cols(void)
 
 /* Row pin configuration
  */
-static void unselect_rows(void)
+static void unselect_row(uint8_t row)
 {
-  palSetPadMode(TEENSY_PIN1_IOPORT, TEENSY_PIN1, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN2_IOPORT, TEENSY_PIN2, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN3_IOPORT, TEENSY_PIN3, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN4_IOPORT, TEENSY_PIN4, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN5_IOPORT, TEENSY_PIN5, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN6_IOPORT, TEENSY_PIN6, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN7_IOPORT, TEENSY_PIN7, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN8_IOPORT, TEENSY_PIN8, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN9_IOPORT, TEENSY_PIN9, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN10_IOPORT, TEENSY_PIN10, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN16_IOPORT, TEENSY_PIN16, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN17_IOPORT, TEENSY_PIN17, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN21_IOPORT, TEENSY_PIN21, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN22_IOPORT, TEENSY_PIN22, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN29_IOPORT, TEENSY_PIN29, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN30_IOPORT, TEENSY_PIN30, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN31_IOPORT, TEENSY_PIN31, PAL_MODE_INPUT); // hi-Z
-  palSetPadMode(TEENSY_PIN32_IOPORT, TEENSY_PIN32, PAL_MODE_INPUT); // hi-Z
+  (void)row;
+  switch(row) {
+  case 0:
+    palSetPadMode(TEENSY_PIN1_IOPORT, TEENSY_PIN1, PAL_MODE_INPUT); break; // hi-Z
+  case 1:
+    palSetPadMode(TEENSY_PIN2_IOPORT, TEENSY_PIN2, PAL_MODE_INPUT); break; // hi-Z
+  case 2:
+    palSetPadMode(TEENSY_PIN3_IOPORT, TEENSY_PIN3, PAL_MODE_INPUT); break; // hi-Z
+  case 3:
+    palSetPadMode(TEENSY_PIN4_IOPORT, TEENSY_PIN4, PAL_MODE_INPUT); break; // hi-Z
+  case 4:
+    palSetPadMode(TEENSY_PIN5_IOPORT, TEENSY_PIN5, PAL_MODE_INPUT); break; // hi-Z
+  case 5:
+    palSetPadMode(TEENSY_PIN6_IOPORT, TEENSY_PIN6, PAL_MODE_INPUT); break; // hi-Z
+  case 6:
+    palSetPadMode(TEENSY_PIN7_IOPORT, TEENSY_PIN7, PAL_MODE_INPUT); break; // hi-Z
+  case 7:
+    palSetPadMode(TEENSY_PIN8_IOPORT, TEENSY_PIN8, PAL_MODE_INPUT); break; // hi-Z
+  case 8:
+    palSetPadMode(TEENSY_PIN9_IOPORT, TEENSY_PIN9, PAL_MODE_INPUT); break; // hi-Z
+  case 9:
+    palSetPadMode(TEENSY_PIN10_IOPORT, TEENSY_PIN10, PAL_MODE_INPUT); break; // hi-Z
+  case 10:
+    palSetPadMode(TEENSY_PIN16_IOPORT, TEENSY_PIN16, PAL_MODE_INPUT); break; // hi-Z
+  case 11:
+    palSetPadMode(TEENSY_PIN17_IOPORT, TEENSY_PIN17, PAL_MODE_INPUT); break; // hi-Z
+  case 12:
+    palSetPadMode(TEENSY_PIN21_IOPORT, TEENSY_PIN21, PAL_MODE_INPUT); break; // hi-Z
+  case 13:
+    palSetPadMode(TEENSY_PIN22_IOPORT, TEENSY_PIN22, PAL_MODE_INPUT); break; // hi-Z
+  case 14:
+    palSetPadMode(TEENSY_PIN29_IOPORT, TEENSY_PIN29, PAL_MODE_INPUT); break; // hi-Z
+  case 15:
+    palSetPadMode(TEENSY_PIN30_IOPORT, TEENSY_PIN30, PAL_MODE_INPUT); break; // hi-Z
+  case 16:
+    palSetPadMode(TEENSY_PIN31_IOPORT, TEENSY_PIN31, PAL_MODE_INPUT); break; // hi-Z
+  case 17:
+    palSetPadMode(TEENSY_PIN32_IOPORT, TEENSY_PIN32, PAL_MODE_INPUT); break; // hi-Z
+  }
 }
 
 static void select_row(uint8_t row)
